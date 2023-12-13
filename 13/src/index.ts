@@ -1441,23 +1441,19 @@ const invertPattern = function (pattern: string[]): string[] {
   return invertedPattern;
 };
 
-const checkPattern = function (index: number): void {
+const checkPattern = function (index: number) {
   const pattern: string[] = allPatterns[index];
   const invertedPattern: string[] = allInvertedPatterns[index];
-  const horizontalCheck: number = Math.floor(pattern.length / 2);
-  const verticalCheck: number = Math.floor(invertedPattern.length / 2);
 
   // Check horizontal line of reflection
-  for (let i = horizontalCheck - 1; i <= horizontalCheck; i++) {
+  for (let i = 0; i < pattern.length - 1; i++) {
     if (pattern[i] === pattern[i + 1]) {
       let reflecting = true;
-      let mirrorCount = 1;
       let leftIndex = i - 1;
       let rightIndex = i + 2;
 
-      while (reflecting && leftIndex > 0 && rightIndex < pattern.length) {
+      while (reflecting && leftIndex >= 0 && rightIndex < pattern.length) {
         if (pattern[leftIndex] === pattern[rightIndex]) {
-          mirrorCount++;
           leftIndex--;
           rightIndex++;
         } else {
@@ -1465,25 +1461,29 @@ const checkPattern = function (index: number): void {
         }
       }
 
-      if (mirrorCount == horizontalCheck) horizontalMatches.push(i + 1);
+      if (reflecting) {
+        console.log(
+          `Found horizontal match on pattern ${index + 1} on line ${i + 1}`
+        );
+        horizontalMatches.push(i + 1);
+        verticalMatches.push(0);
+      }
     }
   }
 
   // Check vertical line of reflection
-  for (let i = verticalCheck - 1; i <= verticalCheck; i++) {
+  for (let i = 0; i < invertedPattern.length - 1; i++) {
     if (invertedPattern[i] === invertedPattern[i + 1]) {
       let reflecting = true;
-      let mirrorCount = 1;
       let leftIndex = i - 1;
       let rightIndex = i + 2;
 
       while (
         reflecting &&
-        leftIndex > 0 &&
+        leftIndex >= 0 &&
         rightIndex < invertedPattern.length
       ) {
         if (invertedPattern[leftIndex] === invertedPattern[rightIndex]) {
-          mirrorCount++;
           leftIndex--;
           rightIndex++;
         } else {
@@ -1491,14 +1491,114 @@ const checkPattern = function (index: number): void {
         }
       }
 
-      if (mirrorCount == verticalCheck) verticalMatches.push(i + 1);
+      if (reflecting) {
+        console.log(
+          `Found vertical match on pattern ${index + 1} on line ${i + 1}`
+        );
+        verticalMatches.push(i + 1);
+        horizontalMatches.push(0);
+      }
     }
   }
+};
+
+const flipCharacter = function (
+  index: number,
+  row: number,
+  column: number
+): string[] {
+  let pattern: string[] = allPatterns[index];
+
+  let newStr: string[] = [...pattern[row]];
+  newStr[column] == "." ? (newStr[column] = "#") : (newStr[column] = ".");
+  pattern[row] = newStr.join("");
+
+  return pattern;
+};
+
+const checkCleanPattern = function (pattern: string[]): [number, number] {
+  const invertedPattern: string[] = invertPattern(pattern);
+  let horizontalMatch: number = 0;
+  let verticalMatch: number = 0;
+
+  // Check horizontal line of reflection
+  for (let i = 0; i < pattern.length - 1; i++) {
+    if (pattern[i] === pattern[i + 1]) {
+      let reflecting = true;
+      let leftIndex = i - 1;
+      let rightIndex = i + 2;
+
+      while (reflecting && leftIndex >= 0 && rightIndex < pattern.length) {
+        if (pattern[leftIndex] === pattern[rightIndex]) {
+          leftIndex--;
+          rightIndex++;
+        } else {
+          reflecting = false;
+        }
+      }
+
+      if (reflecting) {
+        horizontalMatch = i + 1;
+      }
+    }
+  }
+
+  // Check vertical line of reflection
+  for (let i = 0; i < invertedPattern.length - 1; i++) {
+    if (invertedPattern[i] === invertedPattern[i + 1]) {
+      let reflecting = true;
+      let leftIndex = i - 1;
+      let rightIndex = i + 2;
+
+      while (
+        reflecting &&
+        leftIndex >= 0 &&
+        rightIndex < invertedPattern.length
+      ) {
+        if (invertedPattern[leftIndex] === invertedPattern[rightIndex]) {
+          leftIndex--;
+          rightIndex++;
+        } else {
+          reflecting = false;
+        }
+      }
+
+      if (reflecting) {
+        verticalMatch = i + 1;
+      }
+    }
+  }
+
+  return [horizontalMatch, verticalMatch];
 };
 
 const checkAllPatterns = function () {
   for (let i = 0; i < allPatterns.length; i++) {
     checkPattern(i);
+  }
+};
+
+const checkAllCleanPatterns = function () {
+  for (let i = 0; i < allPatterns.length; i++) {
+    for (let j = 0; j < allPatterns[0].length; j++) {
+      for (let k = 0; k < allPatterns[0][0].length; k++) {
+        const newPattern = flipCharacter(i, j, k);
+        const [hor, ver] = checkCleanPattern(newPattern);
+        if (hor > 0) {
+          console.log(
+            `For pattern ${i}, the match is changing to horizontal at ${hor}`
+          );
+          horizontalMatches[i] = hor;
+          verticalMatches[i] = 0;
+        } else if (ver > 0) {
+          console.log(
+            `For pattern ${j}, the match is changing to vertical at ${hor}`
+          );
+          verticalMatches[i] = ver;
+          horizontalMatches[i] = 0;
+        }
+      }
+    }
   }
 };
 
@@ -1512,7 +1612,7 @@ const getAnswer = function (): number {
 };
 
 //--------------- Answer section ----------------------//
-const input: string[] = realInput;
+const input: string[] = testInput;
 const allPatterns: string[][] = getPatterns(input);
 const allInvertedPatterns: string[][] = invertAllPatterns(allPatterns);
 
@@ -1520,5 +1620,5 @@ let horizontalMatches: number[] = [];
 let verticalMatches: number[] = [];
 
 checkAllPatterns();
-console.log(horizontalMatches, verticalMatches);
+checkAllCleanPatterns();
 console.log(getAnswer());
