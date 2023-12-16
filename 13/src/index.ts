@@ -1520,7 +1520,10 @@ const flipCharacter = function (
   return pattern;
 };
 
-const checkCleanPattern = function (pattern: string[]): [number, number] {
+const checkCleanPattern = function (
+  index: number,
+  pattern: string[]
+): [number, number] {
   const invertedPattern: string[] = invertPattern(pattern);
   let horizontalMatch: number = 0;
   let verticalMatch: number = 0;
@@ -1541,7 +1544,7 @@ const checkCleanPattern = function (pattern: string[]): [number, number] {
         }
       }
 
-      if (reflecting) {
+      if (reflecting && horizontalMatches[index] != i + 1) {
         horizontalMatch = i + 1;
         return [horizontalMatch, 0];
       }
@@ -1568,7 +1571,7 @@ const checkCleanPattern = function (pattern: string[]): [number, number] {
         }
       }
 
-      if (reflecting) {
+      if (reflecting && verticalMatches[index] != i + 1) {
         verticalMatch = i + 1;
         return [0, verticalMatch];
       }
@@ -1586,9 +1589,12 @@ const checkAllPatterns = function () {
 
 const findNewMatch = function (i: number, pattern: string[]): [number, number] {
   for (let j = 0; j < pattern.length; j++) {
-    for (let k = 0; k < allPatterns[0].length; k++) {
+    for (let k = 0; k < pattern[0].length; k++) {
+      if (j == 7 && k == 0) {
+        ("Break here");
+      }
       const newPattern = flipCharacter(i, j, k);
-      const [hor, ver] = checkCleanPattern(newPattern);
+      const [hor, ver] = checkCleanPattern(i, newPattern);
       if (hor > 0 && hor != horizontalMatches[i]) {
         console.log(
           `For pattern ${i + 1}, the match is changing to horizontal at ${hor}`
@@ -1637,3 +1643,19 @@ checkAllPatterns();
 checkAllCleanPatterns();
 // console.log(horizontalMatches, verticalMatches);
 console.log(getAnswer());
+
+const checkPatternTest: string[] = `#..##...#
+#..#..###
+#..#..###
+#..##...#
+.##..#.#.
+.....###.
+#..#.##.#
+...#..###
+.##.#..##
+.##.#.#.#
+#####.#..`.split("\n");
+
+// Expected new mirror at i=3, x = 7, y = 0;
+console.log(findNewMatch(3, checkPatternTest));
+console.dir(allPatterns[31]);
