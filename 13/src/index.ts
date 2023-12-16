@@ -1507,7 +1507,11 @@ const flipCharacter = function (
   row: number,
   column: number
 ): string[] {
-  let pattern: string[] = allPatterns[index];
+  // let pattern: string[] = [allPatterns[index];]
+  let pattern: string[] = [];
+  allPatterns[index].forEach((str) => {
+    pattern.push(str);
+  });
 
   let newStr: string[] = [...pattern[row]];
   newStr[column] == "." ? (newStr[column] = "#") : (newStr[column] = ".");
@@ -1539,6 +1543,7 @@ const checkCleanPattern = function (pattern: string[]): [number, number] {
 
       if (reflecting) {
         horizontalMatch = i + 1;
+        return [horizontalMatch, 0];
       }
     }
   }
@@ -1565,11 +1570,12 @@ const checkCleanPattern = function (pattern: string[]): [number, number] {
 
       if (reflecting) {
         verticalMatch = i + 1;
+        return [0, verticalMatch];
       }
     }
   }
 
-  return [horizontalMatch, verticalMatch];
+  return [0, 0];
 };
 
 const checkAllPatterns = function () {
@@ -1578,26 +1584,34 @@ const checkAllPatterns = function () {
   }
 };
 
+const findNewMatch = function (i: number, pattern: string[]): [number, number] {
+  for (let j = 0; j < pattern.length; j++) {
+    for (let k = 0; k < allPatterns[0].length; k++) {
+      const newPattern = flipCharacter(i, j, k);
+      const [hor, ver] = checkCleanPattern(newPattern);
+      if (hor > 0 && hor != horizontalMatches[i]) {
+        console.log(
+          `For pattern ${i + 1}, the match is changing to horizontal at ${hor}`
+        );
+        return [hor, 0];
+      } else if (ver > 0 && ver != verticalMatches[i]) {
+        console.log(
+          `For pattern ${i + 1}, the match is changing to vertical at ${ver}`
+        );
+        return [0, ver];
+      }
+    }
+  }
+  return [0, 0];
+};
+
 const checkAllCleanPatterns = function () {
   for (let i = 0; i < allPatterns.length; i++) {
-    for (let j = 0; j < allPatterns[0].length; j++) {
-      for (let k = 0; k < allPatterns[0][0].length; k++) {
-        const newPattern = flipCharacter(i, j, k);
-        const [hor, ver] = checkCleanPattern(newPattern);
-        if (hor > 0) {
-          console.log(
-            `For pattern ${i}, the match is changing to horizontal at ${hor}`
-          );
-          horizontalMatches[i] = hor;
-          verticalMatches[i] = 0;
-        } else if (ver > 0) {
-          console.log(
-            `For pattern ${j}, the match is changing to vertical at ${hor}`
-          );
-          verticalMatches[i] = ver;
-          horizontalMatches[i] = 0;
-        }
-      }
+    console.log(`Checking pattern ${i + 1}`);
+    const [hor, ver] = findNewMatch(i, allPatterns[i]);
+    if (hor > 0 || ver > 0) {
+      horizontalMatches[i] = hor;
+      verticalMatches[i] = ver;
     }
   }
 };
@@ -1612,7 +1626,7 @@ const getAnswer = function (): number {
 };
 
 //--------------- Answer section ----------------------//
-const input: string[] = testInput;
+const input: string[] = realInput;
 const allPatterns: string[][] = getPatterns(input);
 const allInvertedPatterns: string[][] = invertAllPatterns(allPatterns);
 
@@ -1621,4 +1635,5 @@ let verticalMatches: number[] = [];
 
 checkAllPatterns();
 checkAllCleanPatterns();
+// console.log(horizontalMatches, verticalMatches);
 console.log(getAnswer());
