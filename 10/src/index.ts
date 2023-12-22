@@ -389,19 +389,19 @@ const fillEdges = (graph: Graph, node: GraphNode): Graph => {
 };
 
 //--------------- Answer section ----------------------//
-const input: string[] = realInput;
+const input: string[] = testInput;
 let grid: string[][] = getGrid(input);
 // console.log(grid);
 
-// grid[2][0] = "F"; // Replace S
-console.log(grid[70][91]);
-grid[70][91] = "F"; // Replace S
+grid[2][0] = "F"; // Replace S
+// console.log(grid[70][91]);
+// grid[70][91] = "F"; // Replace S
 
 let graph = new Graph(grid.length * grid[0].length);
 graph = fillNodes(graph);
 
-// const startNode: string = "2|0";
-const startNode: string = "70|91";
+const startNode: string = "2|0";
+// const startNode: string = "70|91";
 
 const answer: number = graph.countLoop(startNode);
 

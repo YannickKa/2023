@@ -352,15 +352,15 @@ const fillEdges = (graph, node) => {
     return graph;
 };
 //--------------- Answer section ----------------------//
-const input = realInput;
+const input = testInput;
 let grid = getGrid(input);
 // console.log(grid);
-// grid[2][0] = "F"; // Replace S
-console.log(grid[70][91]);
-grid[70][91] = "F"; // Replace S
+grid[2][0] = "F"; // Replace S
+// console.log(grid[70][91]);
+// grid[70][91] = "F"; // Replace S
 let graph = new Graph(grid.length * grid[0].length);
 graph = fillNodes(graph);
-// const startNode: string = "2|0";
-const startNode = "70|91";
+const startNode = "2|0";
+// const startNode: string = "70|91";
 const answer = graph.countLoop(startNode);
 console.log(answer);
