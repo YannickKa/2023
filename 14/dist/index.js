@@ -109,8 +109,7 @@ O..#......O.#.O.O.#.OOO.......O.O.#.O...OO......##...O....O.O#O..O.O.....O..#..#
 #..#O.O...#.O.O.........O.O..#......OO...#...#..#.##O...#.O...........O.#.#OO.##..O..O...O.#OO...#OO
 ..##.##..O....OO...OOO.........#.O.......#.O#..O#....OOO.#....O#.#....OO...#.....#.O...O.........#.O
 OO##..O#.OO##.......O...OOO.#..O........#O.O.#.O..O..O..#.....O.O..OO...O##....O.#..OO#O....O..##...
-..O..O..#.O..........O..O..OO.....#....O#...O#........##.O.#....OO.O.....O...O####...#O.#O.O....#O..
-`.split("\n");
+..O..O..#.O..........O..O..OO.....#....O#...O#........##.O.#....OO.O.....O...O####...#O.#O.O....#O..`.split("\n");
 const getGrid = function (input) {
     let output = [];
     input.forEach((string) => {
@@ -193,16 +192,28 @@ const moveRocksWest = function () {
         rocks[index] = { row: rock.row, col: nextCol + 1 };
     });
 };
-const repeatCycle = function (cycles) {
-    for (let i = 0; i <= cycles; i++) {
+const findCycleLength = function () {
+    let gridStr = grid.flat().join("");
+    const allGrids = [];
+    while (allGrids.indexOf(gridStr) == -1) {
+        allGrids.push(gridStr);
         moveRocksNorth();
         moveRocksWest();
         moveRocksSouth();
         moveRocksEast();
-        // console.log(`Currently the load is: ${getAnswer(rocks)}`);
+        gridStr = grid.flat().join("");
+    }
+    return [allGrids.indexOf(gridStr), allGrids.length];
+};
+const repeatCycle = function (cycle) {
+    for (let i = 0; i < cycle; i++) {
+        moveRocksNorth();
+        moveRocksWest();
+        moveRocksSouth();
+        moveRocksEast();
     }
 };
-const getAnswer = function () {
+const getLoad = function () {
     let answer = 0;
     rocks.forEach((rock) => {
         answer += grid.length - rock.row;
@@ -214,8 +225,9 @@ const input = realInput;
 let grid = getGrid(input);
 let rocks = findRocks();
 const start = performance.now();
-// rocks = moveRocksNorth(rocks);
-repeatCycle(1000);
+const [startCycle, endCycle] = findCycleLength();
 const end = performance.now();
-console.log(`Running the cycle took ${end - start} ms`);
-console.log(getAnswer());
+let remainder = (1000000000 - endCycle) % (endCycle - startCycle);
+repeatCycle(remainder);
+const answer = getLoad();
+console.log(answer);

@@ -110,8 +110,9 @@ O..#......O.#.O.O.#.OOO.......O.O.#.O...OO......##...O....O.O#O..O.O.....O..#..#
 #..#O.O...#.O.O.........O.O..#......OO...#...#..#.##O...#.O...........O.#.#OO.##..O..O...O.#OO...#OO
 ..##.##..O....OO...OOO.........#.O.......#.O#..O#....OOO.#....O#.#....OO...#.....#.O...O.........#.O
 OO##..O#.OO##.......O...OOO.#..O........#O.O.#.O..O..O..#.....O.O..OO...O##....O.#..OO#O....O..##...
-..O..O..#.O..........O..O..OO.....#....O#...O#........##.O.#....OO.O.....O...O####...#O.#O.O....#O..
-`.split("\n");
+..O..O..#.O..........O..O..OO.....#....O#...O#........##.O.#....OO.O.....O...O####...#O.#O.O....#O..`.split(
+    "\n"
+  );
 
 //--------------- Function section ----------------------//
 interface Coordinate {
@@ -215,17 +216,31 @@ const moveRocksWest = function (): void {
   });
 };
 
-const repeatCycle = function (cycles: number): void {
-  for (let i = 0; i <= cycles; i++) {
+const findCycleLength = function (): [number, number] {
+  let gridStr: string = grid.flat().join("");
+  const allGrids: string[] = [];
+  while (allGrids.indexOf(gridStr) == -1) {
+    allGrids.push(gridStr);
     moveRocksNorth();
     moveRocksWest();
     moveRocksSouth();
     moveRocksEast();
-    // console.log(`Currently the load is: ${getAnswer(rocks)}`);
+    gridStr = grid.flat().join("");
+  }
+
+  return [allGrids.indexOf(gridStr), allGrids.length];
+};
+
+const repeatCycle = function (cycle: number) {
+  for (let i = 0; i < cycle; i++) {
+    moveRocksNorth();
+    moveRocksWest();
+    moveRocksSouth();
+    moveRocksEast();
   }
 };
 
-const getAnswer = function (): number {
+const getLoad = function (): number {
   let answer: number = 0;
 
   rocks.forEach((rock) => {
@@ -240,8 +255,10 @@ const input = realInput;
 let grid = getGrid(input);
 let rocks = findRocks();
 const start = performance.now();
-// rocks = moveRocksNorth(rocks);
-repeatCycle(1000);
+const [startCycle, endCycle] = findCycleLength();
 const end = performance.now();
-console.log(`Running the cycle took ${end - start} ms`);
-console.log(getAnswer());
+
+let remainder = (1000000000 - endCycle) % (endCycle - startCycle);
+repeatCycle(remainder);
+const answer = getLoad();
+console.log(answer);
