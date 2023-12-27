@@ -680,13 +680,35 @@ L 4 (#2b4472)
 D 7 (#2350d3)
 L 9 (#1dbbd2)
 U 4 (#1ac8d3)`.split("\n");
-const getInstructions = function (input) {
+const getInstructions = function (input, puzzle) {
     let instructions = [];
+    let directionStr;
     input.forEach((str) => {
         const [direction, stepsStr, colorStr] = str.split(" ");
         const steps = Number(stepsStr);
-        const color = colorStr.replace("(", "").replace(")", "");
-        instructions.push({ direction: direction, steps: steps, color: color });
+        const color = colorStr.replace("(#", "").replace(")", "");
+        const hex = color.slice(0, 5);
+        switch (color.at(5)) {
+            case "0":
+                directionStr = "R";
+                break;
+            case "1":
+                directionStr = "D";
+                break;
+            case "2":
+                directionStr = "L";
+                break;
+            case "3":
+                directionStr = "U";
+                break;
+        }
+        puzzle == 1
+            ? instructions.push({ direction: direction, steps: steps, color: color })
+            : instructions.push({
+                direction: directionStr,
+                steps: hexToDecimal(hex),
+                color: color,
+            });
     });
     return instructions;
 };
@@ -760,6 +782,36 @@ const followInstructions = function () {
         }
     });
 };
+function hexToDecimal(hex) {
+    let res = 0;
+    let value;
+    for (let i = 0; i < hex.length; i++) {
+        switch (hex.at(i)) {
+            case "a":
+                value = 10;
+                break;
+            case "b":
+                value = 11;
+                break;
+            case "c":
+                value = 12;
+                break;
+            case "d":
+                value = 13;
+                break;
+            case "e":
+                value = 14;
+                break;
+            case "f":
+                value = 15;
+                break;
+            default:
+                value = Number(hex.at(i));
+        }
+        res += value * 16 ** (hex.length - 1 - i);
+    }
+    return res;
+}
 function floodFill(row, col, grid) {
     const rows = grid.length;
     const cols = grid[0].length;
@@ -801,11 +853,12 @@ function isNotBlank(cell) {
 //   x.name.toLowerCase();
 // }
 //--------------- Answer section ----------------------//
-const input = realInput;
-const instructions = getInstructions(input);
+const input = testInput;
+const instructions = getInstructions(input, 1);
 let [grid, startPosition] = initGrid(instructions);
 followInstructions();
 // const paddedGrid = padGrid();
-floodFill(110, 2, grid);
+// floodFill(110, 2, grid);
+floodFill(1, 2, grid);
 const answer = getAnswer(grid);
 console.log(answer);

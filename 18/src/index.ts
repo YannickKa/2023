@@ -696,16 +696,40 @@ type Coordinate = {
 type Grid = Cell[][];
 type Cell = "*" | "#" | ".";
 
-const getInstructions = function (input: string[]): Instruction[] {
+const getInstructions = function (
+  input: string[],
+  puzzle: number
+): Instruction[] {
   let instructions: Instruction[] = [];
+  let directionStr: string;
 
   input.forEach((str) => {
     const [direction, stepsStr, colorStr] = str.split(" ");
 
     const steps = Number(stepsStr);
-    const color = colorStr.replace("(", "").replace(")", "");
-
-    instructions.push({ direction: direction, steps: steps, color: color });
+    const color = colorStr.replace("(#", "").replace(")", "");
+    const hex = color.slice(0, 5);
+    switch (color.at(5)) {
+      case "0":
+        directionStr = "R";
+        break;
+      case "1":
+        directionStr = "D";
+        break;
+      case "2":
+        directionStr = "L";
+        break;
+      case "3":
+        directionStr = "U";
+        break;
+    }
+    puzzle == 1
+      ? instructions.push({ direction: direction, steps: steps, color: color })
+      : instructions.push({
+          direction: directionStr,
+          steps: hexToDecimal(hex),
+          color: color,
+        });
   });
 
   return instructions;
@@ -808,6 +832,40 @@ const followInstructions = function () {
   });
 };
 
+function hexToDecimal(hex: string): number {
+  let res: number = 0;
+  let value: number;
+
+  for (let i = 0; i < hex.length; i++) {
+    switch (hex.at(i)) {
+      case "a":
+        value = 10;
+        break;
+      case "b":
+        value = 11;
+        break;
+      case "c":
+        value = 12;
+        break;
+      case "d":
+        value = 13;
+        break;
+      case "e":
+        value = 14;
+        break;
+      case "f":
+        value = 15;
+        break;
+      default:
+        value = Number(hex.at(i));
+    }
+
+    res += value * 16 ** (hex.length - 1 - i);
+  }
+
+  return res;
+}
+
 function floodFill(row: number, col: number, grid: Grid): void {
   const rows = grid.length;
   const cols = grid[0].length;
@@ -858,12 +916,12 @@ function isNotBlank(cell: Cell): cell is Exclude<Cell, "."> {
 // }
 
 //--------------- Answer section ----------------------//
-const input: string[] = realInput;
-const instructions: Instruction[] = getInstructions(input);
+const input: string[] = testInput;
+const instructions: Instruction[] = getInstructions(input, 1);
 let [grid, startPosition] = initGrid(instructions);
-
 followInstructions();
 // const paddedGrid = padGrid();
-floodFill(110, 2, grid);
+// floodFill(110, 2, grid);
+floodFill(1, 2, grid);
 const answer = getAnswer(grid);
 console.log(answer);
