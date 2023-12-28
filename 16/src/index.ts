@@ -133,6 +133,12 @@ function createGrid(input: string[]): string[][] {
   return grid;
 }
 
+function createEnergizedGrid(grid: string[][]) {
+  let energizedGrid: string[][] = [];
+  grid.forEach((row) => energizedGrid.push([...".".repeat(row.length)]));
+  return energizedGrid;
+}
+
 type Snapshot = {
   current: number[];
   previous: number[];
@@ -308,12 +314,54 @@ const printGrid = function (grid: string[][]) {
   grid.forEach((row) => console.log(row.join("")));
   console.log("\n");
 };
+
+const findMax = function (grid: string[][]): number {
+  let max: number = 0;
+
+  for (let i = 0; i < grid.length; i++) {
+    // From left
+    let start = [i, 0];
+    let previous = [i, -1];
+    let energizedGrid = createEnergizedGrid(grid);
+    followBeam(grid, energizedGrid, start, previous);
+    let answer = getAnswer(energizedGrid);
+    if (answer > max) max = answer;
+
+    // From right
+    start = [i, grid[0].length - 1];
+    previous = [i, grid[0].length];
+    energizedGrid = createEnergizedGrid(grid);
+    followBeam(grid, energizedGrid, start, previous);
+    answer = getAnswer(energizedGrid);
+    if (answer > max) max = answer;
+  }
+
+  for (let i = 0; i < grid[0].length; i++) {
+    // From top
+    let start = [0, i];
+    let previous = [-1, i];
+    let energizedGrid = createEnergizedGrid(grid);
+    followBeam(grid, energizedGrid, start, previous);
+    let answer = getAnswer(energizedGrid);
+    if (answer > max) max = answer;
+
+    // From bottom
+    start = [grid.length - 1, i];
+    previous = [grid.length, i];
+    energizedGrid = createEnergizedGrid(grid);
+    followBeam(grid, energizedGrid, start, previous);
+    answer = getAnswer(energizedGrid);
+    if (answer > max) max = answer;
+  }
+
+  return max;
+};
 //--------------- Answer section ----------------------//
 const input = realInput;
 const grid = createGrid(input);
-let energizedGrid: string[][] = [];
-grid.forEach((row) => energizedGrid.push([...".".repeat(row.length)]));
-energizedGrid = followBeam(grid, energizedGrid, [0, 0]);
-const answer = getAnswer(energizedGrid);
-printGrid(energizedGrid);
-console.log(answer);
+const start = Date.now();
+const answer = findMax(grid);
+const end = Date.now();
+// energizedGrid = followBeam(grid, energizedGrid, [0, 0]);
+// const answer = getAnswer(energizedGrid);
+console.log(`Answer two: ${answer}. It took ${end - start} ms to find`);
