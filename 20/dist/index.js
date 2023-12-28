@@ -69,105 +69,106 @@ broadcaster -> np, mg, vd, xr
 %xg -> gr, qn
 %mx -> gr, xd`.split("\n");
 const readModules = (input) => {
-  const moduleArray = [];
-  input.forEach((str) => {
-    const [part1, part2] = str.split(" -> ");
-    const destinations = part2.split(", ");
-    let moduleEl;
-    if (part1 === "broadcaster") {
-      moduleEl = {
-        id: "!",
-        type: "!",
-        active: true,
-        destinations: destinations,
-      };
-    } else {
-      moduleEl = {
-        id: part1.slice(1),
-        type: part1.at(0),
-        active: false,
-        destinations: destinations,
-      };
-    }
-    moduleArray.push(moduleEl);
-  });
-  moduleArray.forEach((m) => {
-    m.destinations.forEach((dst) => {
-      const dstModule = moduleArray.findIndex((m) => m.id === dst);
-      if (moduleArray[dstModule]?.type === "&") {
-        if (moduleArray[dstModule].history) {
-          moduleArray[dstModule].history?.push([m.id, "low"]);
-        } else {
-          moduleArray[dstModule].history = [[m.id, "low"]];
+    const moduleArray = [];
+    input.forEach((str) => {
+        const [part1, part2] = str.split(" -> ");
+        const destinations = part2.split(", ");
+        let moduleEl;
+        if (part1 === "broadcaster") {
+            moduleEl = {
+                id: "!",
+                type: "!",
+                active: true,
+                destinations: destinations,
+            };
         }
-      }
+        else {
+            moduleEl = {
+                id: part1.slice(1),
+                type: part1.at(0),
+                active: false,
+                destinations: destinations,
+            };
+        }
+        moduleArray.push(moduleEl);
     });
-  });
-  return moduleArray;
+    moduleArray.forEach((m) => {
+        m.destinations.forEach((dst) => {
+            const dstModule = moduleArray.findIndex((m) => m.id === dst);
+            if (moduleArray[dstModule]?.type === "&") {
+                if (moduleArray[dstModule].history) {
+                    moduleArray[dstModule].history?.push([m.id, "low"]);
+                }
+                else {
+                    moduleArray[dstModule].history = [[m.id, "low"]];
+                }
+            }
+        });
+    });
+    return moduleArray;
 };
 const handleFlipFlopSignal = function (pulse, currentModule, modules, queue) {
-  const [_, id, signal] = pulse;
-  const currentState = modules[currentModule].active;
-  let nextSignal;
-  if (signal === "low") {
-    currentState ? (nextSignal = "low") : (nextSignal = "high");
-    modules[currentModule].active = !currentState;
-    modules[currentModule].destinations.forEach((dst) =>
-      queue.push([id, dst, nextSignal])
-    );
-  }
+    const [_, id, signal] = pulse;
+    const currentState = modules[currentModule].active;
+    let nextSignal;
+    if (signal === "low") {
+        currentState ? (nextSignal = "low") : (nextSignal = "high");
+        modules[currentModule].active = !currentState;
+        modules[currentModule].destinations.forEach((dst) => queue.push([id, dst, nextSignal]));
+    }
 };
-const handleConjunctionSignal = function (
-  pulse,
-  currentModule,
-  modules,
-  queue
-) {
-  const [src, id, signal] = pulse;
-  const historyEl = modules[currentModule].history?.findIndex(
-    (source) => source[0] === src
-  );
-  let nextSignal;
-
-  modules[currentModule].history[historyEl][1] = signal;
-
-  modules[currentModule].history.filter((el) => el[1] === "low").length == 0
-    ? (nextSignal = "low")
-    : (nextSignal = "high");
-
-  modules[currentModule].destinations.forEach((dst) =>
-    queue.push([id, dst, nextSignal])
-  );
+const handleConjunctionSignal = function (pulse, currentModule, modules, queue) {
+    const [src, id, _] = pulse;
+    const historyEl = modules[currentModule].history?.findIndex((source) => source[0] === src);
+    let nextSignal;
+    modules[currentModule].history[historyEl][1] === "low"
+        ? (modules[currentModule].history[historyEl][1] = "high")
+        : (modules[currentModule].history[historyEl][1] = "low");
+    modules[currentModule].history.filter((el) => el[1] === "low").length == 0
+        ? (nextSignal = "low")
+        : (nextSignal = "high");
+    modules[currentModule].destinations.forEach((dst) => queue.push([id, dst, nextSignal]));
 };
 const pressButton = function (modules) {
-  const queue = [];
-  const broadcastModule = modules.find((m) => m.id === "!");
-  lows++;
-  broadcastModule.destinations.forEach((id) => {
-    queue.push(["!", id, "low"]);
-  });
-  while (queue.length > 0) {
-    const pulse = queue.shift();
-    pulse[2] === "low" ? lows++ : highs++;
-    const currentModule = modules.findIndex((m) => m.id === pulse[1]);
-    if (modules[currentModule]?.type === "%") {
-      handleFlipFlopSignal(pulse, currentModule, modules, queue);
-    } else if (modules[currentModule]?.type === "&") {
-      handleConjunctionSignal(pulse, currentModule, modules, queue);
+    const queue = [];
+    const broadcastModule = modules.find((m) => m.id === "!");
+    lows++;
+    broadcastModule.destinations.forEach((id) => {
+        queue.push(["!", id, "low"]);
+    });
+    while (queue.length > 0) {
+        const pulse = queue.shift();
+        pulse[2] === "low" ? lows++ : highs++;
+        const currentModule = modules.findIndex((m) => m.id === pulse[1]);
+        if (modules[currentModule]?.type === "%") {
+            handleFlipFlopSignal(pulse, currentModule, modules, queue);
+        }
+        else if (modules[currentModule]?.type === "&") {
+            handleConjunctionSignal(pulse, currentModule, modules, queue);
+        }
     }
-  }
 };
 const loopThroughCycles = function (cycles, modules) {
-  let i = 0;
-  while (i < cycles) {
-    pressButton(modules);
-    i++;
-  }
+    let i = 0;
+    while (i < cycles) {
+        pressButton(modules);
+        i++;
+    }
 };
 //--------------- Answer section ----------------------//
 const input = realInput;
 const modules = readModules(input);
 let lows = 0;
 let highs = 0;
-loopThroughCycles(1000, modules);
-console.log(lows, highs, lows * highs);
+// loopThroughCycles(1000, modules);
+// console.log(lows, highs, lows * highs);
+let activateRx = false;
+let pressCount = 0;
+// For rx to be low, dh/qd/bb/dp need to be high
+// Need to detect cycles for all 4
+let cyclesFound = false;
+while (!cyclesFound) {
+    pressButton(modules);
+    pressCount++;
+}
+console.log(pressCount);

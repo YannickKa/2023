@@ -177,6 +177,7 @@ const pressButton = function (modules: Module[]) {
 
   while (queue.length > 0) {
     const pulse = queue.shift()!;
+
     pulse[2] === "low" ? lows++ : highs++;
 
     const currentModule = modules.findIndex((m) => m.id === pulse[1])!;
@@ -202,6 +203,19 @@ const modules = readModules(input);
 
 let lows: number = 0;
 let highs: number = 0;
+// loopThroughCycles(1000, modules);
+// console.log(lows, highs, lows * highs);
 
-loopThroughCycles(1001, modules);
-console.log(lows, highs, lows * highs);
+let activateRx = false;
+let pressCount = 0;
+
+// For rx to be low, dh/qd/bb/dp need to be high
+// Need to detect cycles for all 4
+let cyclesFound = false;
+
+while (!cyclesFound) {
+  pressButton(modules);
+  pressCount++;
+}
+
+console.log(pressCount);
