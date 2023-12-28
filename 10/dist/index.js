@@ -1,10 +1,20 @@
 "use strict";
 //--------------- Input section ----------------------//
-const testInput = `..F7.
+const testInput = `.-F7.
 .FJ|.
 SJ.L7
 |F--J
-LJ...`.split("\n");
+LJ--.`.split("\n");
+const bigTestInput = `FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJ7F7FJ-
+L---JF-JLJ.||-FJLJJ7
+|F|F-JF---7F7-L7L|7|
+|FFJF7L7F-JF7|JL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L`.split("\n");
 const realInput = `..............................................................................................................................................
   .F7F.7-7FF77|7.|-7-7-.|7F-7-|7-.|-FJ-.L7-J.F7..F---F-7-FF777.L7.FJ---.FFF|--7F-JF--.|J-|F-.LL7FFF7-JFJ--F-7L|7.J-L7FF-F7F|7-FFL7-L.--J77--F|7.
   .|-L.|L|--JLL7FLFL.|-J||J||-L7..F-|.LFJL7|7L|-JJ...L--F7|L7FFJ---|J-L7-JJ|.LL|.|-L.L7|.||-7|.|L7J7F-J.7-JL|JL7FJ|.J7-LL-7|LFL|L-7L-F-FJLL-||J.
@@ -179,7 +189,7 @@ class Graph {
                 count++;
             }
         }
-        return Math.floor((count + 1) / 2);
+        return [Math.floor((count + 1) / 2), visited];
     }
 }
 const getGrid = function (schematic) {
@@ -351,16 +361,162 @@ const fillEdges = (graph, node) => {
     }
     return graph;
 };
+const cleanGrid = function (nodes, grid, graph) {
+    let newGrid = [];
+    let emptyRow = ".".repeat(grid[0].length);
+    grid.forEach((row) => {
+        newGrid.push([...emptyRow]);
+    });
+    for (let nodeId of nodes) {
+        const [xstr, ystr] = nodeId.split("|");
+        const x = Number(xstr);
+        const y = Number(ystr);
+        newGrid[x][y] = grid[x][y];
+    }
+    return newGrid;
+};
+const printGrid = (grid) => {
+    console.log("\n");
+    grid.forEach((row) => {
+        console.log(row.join(""));
+    });
+    console.log("\n");
+};
+const matching = function (corners) {
+    corners = corners.sort();
+    return ((corners[0] == "7" && corners[1] == "F") ||
+        (corners[0] == "J" && corners[1] == "L") ||
+        (corners[0] == "F" && corners[1] == "L") ||
+        (corners[0] == "7" && corners[1] == "J"));
+};
+const shootUp = function (row, col, grid) {
+    let count = 0;
+    row--;
+    while (row >= 0) {
+        if (corners.includes(grid[row][col])) {
+            let foundCorners = [];
+            foundCorners.push(grid[row][col]);
+            row--;
+            while (!corners.includes(grid[row][col])) {
+                row--;
+            }
+            foundCorners.push(grid[row][col]);
+            matching(foundCorners) ? (count += 2) : count++;
+            row--;
+        }
+        else if (grid[row][col] === ".") {
+            row--;
+        }
+        else {
+            count++;
+            row--;
+        }
+    }
+    return count % 2 == 0;
+};
+const shootDown = function (row, col, grid) {
+    let count = 0;
+    row++;
+    while (row < grid.length) {
+        if (corners.includes(grid[row][col])) {
+            let foundCorners = [];
+            foundCorners.push(grid[row][col]);
+            row++;
+            while (!corners.includes(grid[row][col])) {
+                row++;
+            }
+            foundCorners.push(grid[row][col]);
+            matching(foundCorners) ? (count += 2) : count++;
+            row++;
+        }
+        else if (grid[row][col] === ".") {
+            row++;
+        }
+        else {
+            count++;
+            row++;
+        }
+    }
+    return count % 2 == 0;
+};
+const shootRight = function (row, col, grid) {
+    let count = 0;
+    col++;
+    while (col < grid[0].length) {
+        if (corners.includes(grid[row][col])) {
+            let foundCorners = [];
+            foundCorners.push(grid[row][col]);
+            col++;
+            while (!corners.includes(grid[row][col])) {
+                col++;
+            }
+            foundCorners.push(grid[row][col]);
+            matching(foundCorners) ? (count += 2) : count++;
+            col++;
+        }
+        else if (grid[row][col] === ".") {
+            col++;
+        }
+        else {
+            count++;
+            col++;
+        }
+    }
+    return count % 2 == 0;
+};
+const shootLeft = function (row, col, grid) {
+    let count = 0;
+    col--;
+    while (col < grid[0].length) {
+        if (corners.includes(grid[row][col])) {
+            let foundCorners = [];
+            foundCorners.push(grid[row][col]);
+            col--;
+            while (!corners.includes(grid[row][col])) {
+                col--;
+            }
+            foundCorners.push(grid[row][col]);
+            matching(foundCorners) ? (count += 2) : count++;
+            col--;
+        }
+        else if (grid[row][col] === ".") {
+            col--;
+        }
+        else {
+            count++;
+            col--;
+        }
+    }
+    return count % 2 == 0;
+};
+const isFree = function (row, col, grid) {
+    return shootUp(row, col, grid) || shootDown(row, col, grid);
+};
+const checkAllCoordinates = function (grid) {
+    let answer = 0;
+    for (let i = 0; i < grid.length; i++) {
+        for (let j = 0; j < grid[0].length; j++) {
+            if (grid[i][j] === "." && !isFree(i, j, grid))
+                answer++;
+        }
+    }
+    return answer++;
+};
 //--------------- Answer section ----------------------//
-const input = testInput;
+const input = realInput;
 let grid = getGrid(input);
 // console.log(grid);
-grid[2][0] = "F"; // Replace S
-// console.log(grid[70][91]);
-// grid[70][91] = "F"; // Replace S
+// grid[2][0] = "F"; // Replace S - testInput
+// grid[0][4] = "7"; // Replace S - bigTestInput
+grid[70][91] = "F"; // Replace S - realInput
 let graph = new Graph(grid.length * grid[0].length);
 graph = fillNodes(graph);
-const startNode = "2|0";
-// const startNode: string = "70|91";
-const answer = graph.countLoop(startNode);
-console.log(answer);
+// const startNode: string = "2|0"; // testInput
+// const startNode: string = "0|4"; // bigTestInput
+const startNode = "70|91"; // realInput
+const [answer, visited] = graph.countLoop(startNode);
+const corners = ["F", "7", "J", "L"];
+grid = cleanGrid(visited, grid, graph);
+printGrid(grid);
+const answerTwo = checkAllCoordinates(grid);
+console.log(answerTwo);

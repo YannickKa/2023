@@ -1,9 +1,20 @@
 //--------------- Input section ----------------------//
-const testInput = `..F7.
+const testInput = `.-F7.
 .FJ|.
 SJ.L7
 |F--J
-LJ...`.split("\n");
+LJ--.`.split("\n");
+
+const bigTestInput = `FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJ7F7FJ-
+L---JF-JLJ.||-FJLJJ7
+|F|F-JF---7F7-L7L|7|
+|FFJF7L7F-JF7|JL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L`.split("\n");
 
 const realInput =
   `..............................................................................................................................................
@@ -184,7 +195,7 @@ class Graph {
     return this.nodeMap.keys;
   }
 
-  countLoop(start: string): number {
+  countLoop(start: string): [number, string[]] {
     let count: number = 0;
     let visited: string[] = [];
     let currentNode: string = start;
@@ -201,7 +212,7 @@ class Graph {
       }
     }
 
-    return Math.floor((count + 1) / 2);
+    return [Math.floor((count + 1) / 2), visited];
   }
 }
 
@@ -388,21 +399,197 @@ const fillEdges = (graph: Graph, node: GraphNode): Graph => {
   return graph;
 };
 
+const cleanGrid = function (
+  nodes: string[],
+  grid: string[][],
+  graph: Graph
+): string[][] {
+  let newGrid: string[][] = [];
+  let emptyRow: string = ".".repeat(grid[0].length);
+  grid.forEach((row) => {
+    newGrid.push([...emptyRow]);
+  });
+  for (let nodeId of nodes) {
+    const [xstr, ystr] = nodeId.split("|");
+    const x = Number(xstr);
+    const y = Number(ystr);
+    newGrid[x][y] = grid[x][y];
+  }
+
+  return newGrid;
+};
+
+const printGrid = (grid: string[][]): void => {
+  console.log("\n");
+  grid.forEach((row) => {
+    console.log(row.join(""));
+  });
+  console.log("\n");
+};
+
+const matching = function (corners: string[]): boolean {
+  corners = corners.sort();
+  return (
+    (corners[0] == "7" && corners[1] == "F") ||
+    (corners[0] == "J" && corners[1] == "L") ||
+    (corners[0] == "F" && corners[1] == "L") ||
+    (corners[0] == "7" && corners[1] == "J")
+  );
+};
+
+const shootUp = function (row: number, col: number, grid: string[][]): boolean {
+  let count: number = 0;
+  row--;
+
+  while (row >= 0) {
+    if (corners.includes(grid[row][col])) {
+      let foundCorners: string[] = [];
+      foundCorners.push(grid[row][col]);
+      row--;
+      while (!corners.includes(grid[row][col])) {
+        row--;
+      }
+      foundCorners.push(grid[row][col]);
+      matching(foundCorners) ? (count += 2) : count++;
+      row--;
+    } else if (grid[row][col] === ".") {
+      row--;
+    } else {
+      count++;
+      row--;
+    }
+  }
+
+  return count % 2 == 0;
+};
+
+const shootDown = function (
+  row: number,
+  col: number,
+  grid: string[][]
+): boolean {
+  let count: number = 0;
+  row++;
+
+  while (row < grid.length) {
+    if (corners.includes(grid[row][col])) {
+      let foundCorners: string[] = [];
+      foundCorners.push(grid[row][col]);
+      row++;
+      while (!corners.includes(grid[row][col])) {
+        row++;
+      }
+      foundCorners.push(grid[row][col]);
+      matching(foundCorners) ? (count += 2) : count++;
+      row++;
+    } else if (grid[row][col] === ".") {
+      row++;
+    } else {
+      count++;
+      row++;
+    }
+  }
+
+  return count % 2 == 0;
+};
+
+const shootRight = function (
+  row: number,
+  col: number,
+  grid: string[][]
+): boolean {
+  let count: number = 0;
+  col++;
+
+  while (col < grid[0].length) {
+    if (corners.includes(grid[row][col])) {
+      let foundCorners: string[] = [];
+      foundCorners.push(grid[row][col]);
+      col++;
+      while (!corners.includes(grid[row][col])) {
+        col++;
+      }
+      foundCorners.push(grid[row][col]);
+      matching(foundCorners) ? (count += 2) : count++;
+      col++;
+    } else if (grid[row][col] === ".") {
+      col++;
+    } else {
+      count++;
+      col++;
+    }
+  }
+
+  return count % 2 == 0;
+};
+
+const shootLeft = function (
+  row: number,
+  col: number,
+  grid: string[][]
+): boolean {
+  let count: number = 0;
+  col--;
+
+  while (col < grid[0].length) {
+    if (corners.includes(grid[row][col])) {
+      let foundCorners: string[] = [];
+      foundCorners.push(grid[row][col]);
+      col--;
+      while (!corners.includes(grid[row][col])) {
+        col--;
+      }
+      foundCorners.push(grid[row][col]);
+      matching(foundCorners) ? (count += 2) : count++;
+      col--;
+    } else if (grid[row][col] === ".") {
+      col--;
+    } else {
+      count++;
+      col--;
+    }
+  }
+
+  return count % 2 == 0;
+};
+
+const isFree = function (row: number, col: number, grid: string[][]): boolean {
+  return shootUp(row, col, grid) || shootDown(row, col, grid);
+};
+
+const checkAllCoordinates = function (grid: string[][]) {
+  let answer: number = 0;
+
+  for (let i = 0; i < grid.length; i++) {
+    for (let j = 0; j < grid[0].length; j++) {
+      if (grid[i][j] === "." && !isFree(i, j, grid)) answer++;
+    }
+  }
+
+  return answer++;
+};
+
 //--------------- Answer section ----------------------//
-const input: string[] = testInput;
+const input: string[] = realInput;
 let grid: string[][] = getGrid(input);
 // console.log(grid);
 
-grid[2][0] = "F"; // Replace S
-// console.log(grid[70][91]);
-// grid[70][91] = "F"; // Replace S
+// grid[2][0] = "F"; // Replace S - testInput
+// grid[0][4] = "7"; // Replace S - bigTestInput
+grid[70][91] = "F"; // Replace S - realInput
 
 let graph = new Graph(grid.length * grid[0].length);
 graph = fillNodes(graph);
 
-const startNode: string = "2|0";
-// const startNode: string = "70|91";
+// const startNode: string = "2|0"; // testInput
+// const startNode: string = "0|4"; // bigTestInput
+const startNode: string = "70|91"; // realInput
 
-const answer: number = graph.countLoop(startNode);
+const [answer, visited] = graph.countLoop(startNode);
 
-console.log(answer);
+const corners: string[] = ["F", "7", "J", "L"];
+
+grid = cleanGrid(visited, grid, graph);
+printGrid(grid);
+const answerTwo = checkAllCoordinates(grid);
+console.log(answerTwo);
