@@ -130,14 +130,13 @@ const handleFlipFlopSignal = function (
 ) {
   const [_, id, signal] = pulse;
   const currentState = modules[currentModule].active;
+  const destinations = modules[currentModule].destinations;
   let nextSignal: string;
 
   if (signal === "low") {
     currentState ? (nextSignal = "low") : (nextSignal = "high");
     modules[currentModule].active = !currentState;
-    modules[currentModule].destinations.forEach((dst) =>
-      queue.push([id, dst, nextSignal])
-    );
+    destinations.forEach((dst) => queue.push([id, dst, nextSignal]));
   }
 };
 
@@ -147,23 +146,19 @@ const handleConjunctionSignal = function (
   modules: Module[],
   queue: [string, string, string][]
 ) {
-  const [src, id, _] = pulse;
-  const historyEl = modules[currentModule].history?.findIndex(
-    (source) => source[0] === src
-  )!;
+  const [src, id, signal] = pulse;
+  const history = modules[currentModule].history!;
+  const historyEl = history.findIndex((source) => source[0] === src)!;
+  const destinations = modules[currentModule].destinations;
   let nextSignal: string;
 
-  modules[currentModule].history![historyEl][1] === "low"
-    ? (modules[currentModule].history![historyEl][1] = "high")
-    : (modules[currentModule].history![historyEl][1] = "low");
+  history[historyEl][1] = signal;
 
-  modules[currentModule].history!.filter((el) => el[1] === "low").length == 0
+  history.filter((el) => el[1] === "low").length == 0
     ? (nextSignal = "low")
     : (nextSignal = "high");
 
-  modules[currentModule].destinations.forEach((dst) =>
-    queue.push([id, dst, nextSignal])
-  );
+  destinations.forEach((dst) => queue.push([id, dst, nextSignal]));
 };
 
 const pressButton = function (modules: Module[]) {
@@ -177,45 +172,76 @@ const pressButton = function (modules: Module[]) {
 
   while (queue.length > 0) {
     const pulse = queue.shift()!;
+    const [source, id, signal] = pulse;
 
-    pulse[2] === "low" ? lows++ : highs++;
+    signal === "low" ? lows++ : highs++;
 
-    const currentModule = modules.findIndex((m) => m.id === pulse[1])!;
-    if (modules[currentModule]?.type === "%") {
-      handleFlipFlopSignal(pulse, currentModule, modules, queue);
-    } else if (modules[currentModule]?.type === "&") {
-      handleConjunctionSignal(pulse, currentModule, modules, queue);
+    const currentModule = modules.find((m) => m.id === id)!;
+    const currentModuleInd = modules.findIndex((m) => m.id === id)!;
+
+    // if (id === "rm" && source == "dh" && signal == "high") {
+    //   highDhArr.push(buttonCounter);
+    // }
+
+    // if (id === "rm" && source == "bb" && signal == "high") {
+    //   highBbArr.push(buttonCounter);
+    // }
+
+    // if (id === "rm" && source == "dp" && signal == "high") {
+    //   highDpArr.push(buttonCounter);
+    // }
+
+    // if (id === "rm" && source == "qd" && signal == "high") {
+    //   highQdArr.push(buttonCounter);
+    // }
+
+    if (currentModule?.type === "%") {
+      handleFlipFlopSignal(pulse, currentModuleInd, modules, queue);
+    } else if (currentModule?.type === "&") {
+      handleConjunctionSignal(pulse, currentModuleInd, modules, queue);
     }
   }
 };
 
 const loopThroughCycles = function (cycles: number, modules: Module[]) {
-  let i = 0;
-  while (i < cycles) {
+  while (buttonCounter < cycles) {
+    buttonCounter++;
     pressButton(modules);
-    i++;
   }
+};
+
+const leastCommonMultiple = function (range: number[]): number {
+  const min: number = Math.min(...range);
+  const max: number = Math.max(...range);
+
+  function gcd(a: number, b: number): number {
+    return !b ? a : gcd(b, a % b);
+  }
+
+  function lcm(a: number, b: number): number {
+    return (a * b) / gcd(a, b);
+  }
+
+  return range.reduce((a, b) => lcm(a, b), min);
 };
 
 //--------------- Answer section ----------------------//
 const input = realInput;
 const modules = readModules(input);
 
-let lows: number = 0;
-let highs: number = 0;
-// loopThroughCycles(1000, modules);
-// console.log(lows, highs, lows * highs);
+// For rx to be low, rm needs to send low, so dh/qd/bb/dp need to be high
+// Need to detect cycles for all 4:
+const highDh = 3877;
+const highQd = 4001;
+const highBb = 3907;
+const highDp = 4027;
 
-let activateRx = false;
-let pressCount = 0;
+let lows = 0;
+let highs = 0;
+let buttonCounter = 0;
 
-// For rx to be low, dh/qd/bb/dp need to be high
-// Need to detect cycles for all 4
-let cyclesFound = false;
+// loopThroughCycles(1000000, modules);
 
-while (!cyclesFound) {
-  pressButton(modules);
-  pressCount++;
-}
+console.log(lows, highs, lows * highs);
 
-console.log(pressCount);
+console.log(`Part 2: ${leastCommonMultiple([highDh, highQd, highBb, highDp])}`);
